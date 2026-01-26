@@ -1,0 +1,37 @@
+#!/usr/bin/env php
+<?php declare( strict_types=1 );
+
+/**
+ * QA Setup Wizard
+ *
+ * Usage: vendor/bin/qa-setup
+ */
+
+// Find autoloader
+$autoloadPaths = [
+	__DIR__.'/../../../autoload.php',    // When installed as dependency
+	__DIR__.'/../vendor/autoload.php',   // When running from QA repo itself
+];
+
+foreach ( $autoloadPaths as $autoloadPath ) {
+	if ( file_exists( $autoloadPath ) ) {
+		require $autoloadPath;
+		break;
+	}
+}
+
+if ( !class_exists( 'FernleafSystems\QA\Installer' ) ) {
+	fwrite( STDERR, "Error: Could not load QA Installer. Run 'composer install' first.\n" );
+	exit( 1 );
+}
+
+// Determine project root
+$projectRoot = getcwd();
+if ( !file_exists( $projectRoot.'/composer.json' ) ) {
+	fwrite( STDERR, "Error: No composer.json found. Run this from your project root.\n" );
+	exit( 1 );
+}
+
+// Run the installer
+$installer = new FernleafSystems\QA\Installer( $projectRoot );
+$installer->run();
