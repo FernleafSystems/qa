@@ -4,15 +4,10 @@ namespace FernleafSystems\QA\Tests\Rector\RuleSet;
 
 use FernleafSystems\QA\Rector\RuleSet\Php83;
 use PHPUnit\Framework\TestCase;
-use Rector\Php80\Rector\Class_\ClassPropertyAssignToConstructorPromotionRector;
-use Rector\Php80\Rector\Switch_\ChangeSwitchToMatchRector;
 use Rector\TypeDeclaration\Rector\ClassMethod\AddVoidReturnTypeWhereNoReturnRector;
 
 final class Php83Test extends TestCase {
-	/**
-	 * @var Php83
-	 */
-	private $ruleSet;
+	private Php83 $ruleSet;
 
 	protected function setUp(): void {
 		$this->ruleSet = new Php83();
@@ -26,13 +21,9 @@ final class Php83Test extends TestCase {
 		$this->assertTrue( $this->ruleSet->usePhpSets() );
 	}
 
-	public function testRulesContainPhp8Features(): void {
-		$rules = $this->ruleSet->rules();
-		$this->assertContains( ClassPropertyAssignToConstructorPromotionRector::class, $rules );
-		$this->assertContains( ChangeSwitchToMatchRector::class, $rules );
-	}
-
 	public function testRulesContainCommonRules(): void {
+		// PHP 8.0+ specific rules (constructor promotion, match) are applied
+		// via withPhpSets() in ConfigFactory, not in RuleSet::rules()
 		$rules = $this->ruleSet->rules();
 		$this->assertContains( AddVoidReturnTypeWhereNoReturnRector::class, $rules );
 	}

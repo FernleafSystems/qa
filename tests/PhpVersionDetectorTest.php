@@ -20,7 +20,7 @@ final class PhpVersionDetectorTest extends TestCase {
 		if ( \is_dir( $this->tempDir ) ) {
 			$files = \glob( $this->tempDir.'/*' );
 			if ( $files !== false ) {
-				\array_map( 'unlink', $files );
+				\array_map( unlink( ... ), $files );
 			}
 			\rmdir( $this->tempDir );
 		}
@@ -31,10 +31,11 @@ final class PhpVersionDetectorTest extends TestCase {
 		$this->assertSame( '8.3', $version );
 	}
 
-	public function testDetectParsesCaret74(): void {
+	public function testDetectParsesUnsupportedVersionReturnsDefault(): void {
+		// PHP 7.4 is no longer supported, should return default (8.3)
 		$this->createComposerJson( ['require' => ['php' => '^7.4']] );
 		$version = PhpVersionDetector::detect( $this->tempDir );
-		$this->assertSame( '7.4', $version );
+		$this->assertSame( '8.3', $version );
 	}
 
 	public function testDetectParsesCaret83(): void {
@@ -44,17 +45,18 @@ final class PhpVersionDetectorTest extends TestCase {
 	}
 
 	public function testDetectParsesOrConstraint(): void {
-		$this->createComposerJson( ['require' => ['php' => '^7.4 || ^8.0']] );
+		// When first version in constraint is unsupported, returns closest supported
+		$this->createComposerJson( ['require' => ['php' => '^8.3 || ^8.4']] );
 		$version = PhpVersionDetector::detect( $this->tempDir );
-		$this->assertSame( '7.4', $version );
+		$this->assertSame( '8.3', $version );
 	}
 
 	public function testDetectParsesPlatformConfig(): void {
 		$this->createComposerJson( [
-			'config' => ['platform' => ['php' => '7.4']],
+			'config' => ['platform' => ['php' => '8.4']],
 		] );
 		$version = PhpVersionDetector::detect( $this->tempDir );
-		$this->assertSame( '7.4', $version );
+		$this->assertSame( '8.4', $version );
 	}
 
 	public function testIsWordPressProjectReturnsTrueForPlugin(): void {
@@ -69,9 +71,13 @@ final class PhpVersionDetectorTest extends TestCase {
 
 	public function testGetSupportedVersions(): void {
 		$versions = PhpVersionDetector::getSupportedVersions();
-		$this->assertContains( '7.4', $versions );
+		$this->assertNotContains( '7.4', $versions );
+		$this->assertNotContains( '8.0', $versions );
+		$this->assertNotContains( '8.1', $versions );
+		$this->assertNotContains( '8.2', $versions );
 		$this->assertContains( '8.3', $versions );
 		$this->assertContains( '8.4', $versions );
+		$this->assertContains( '8.5', $versions );
 	}
 
 	/**

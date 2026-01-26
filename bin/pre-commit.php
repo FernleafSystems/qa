@@ -10,16 +10,6 @@ namespace FernleafSystems\QA\Bin;
  * Install: Add to .git/hooks/pre-commit or use with CaptainHook
  */
 
-// PHP 7.4 polyfill for str_ends_with
-if ( !\function_exists( 'str_ends_with' ) ) {
-	function str_ends_with( string $haystack, string $needle ): bool {
-		if ( $needle === '' ) {
-			return true;
-		}
-		return \substr( $haystack, -\strlen( $needle ) ) === $needle;
-	}
-}
-
 // Find project root by looking for composer.json
 $projectRoot = findProjectRoot( __DIR__ );
 if ( $projectRoot !== null ) {
@@ -73,7 +63,7 @@ function gatherStagedFiles(): array {
 }
 
 function filterFilesByExtension( array $files, array $extensions ): array {
-	$normalizedExtensions = \array_map( 'strtolower', $extensions );
+	$normalizedExtensions = \array_map( strtolower( ... ), $extensions );
 
 	return \array_values(
 		\array_filter(
@@ -112,7 +102,7 @@ function runQualityTools( array $files ): int {
 
 	\putenv( 'RECTOR_DISABLE_PARALLEL=1' );
 
-	$escapedFiles = \array_map( 'escapeshellarg', $files );
+	$escapedFiles = \array_map( escapeshellarg( ... ), $files );
 	$filesArg = \implode( ' ', $escapedFiles );
 
 	$rectorBinary = getBinaryPath( 'rector' );

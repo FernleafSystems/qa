@@ -2,34 +2,21 @@
 
 namespace FernleafSystems\QA\Rector;
 
+use FernleafSystems\QA\Rector\RuleSet\Php83;
+use FernleafSystems\QA\Rector\RuleSet\Php84;
+use FernleafSystems\QA\Rector\RuleSet\Php85;
 use FernleafSystems\QA\Rector\RuleSet\RuleSetInterface;
 use Rector\Config\RectorConfig;
+use Rector\Configuration\RectorConfigBuilder;
 
 final class ConfigFactory {
-	private RuleSetInterface $ruleSet;
+	/** @var array<string> */
+	private array $paths = [];
 
-	/**
-	 * @var array<string>
-	 */
-	private $paths = [];
+	/** @var array<string> */
+	private array $skip = [];
 
-	/**
-	 * @var array<class-string|string>
-	 */
-	private $additionalSkip = [];
-
-	/**
-	 * @var bool
-	 */
-	private $importShortClasses = false;
-
-	/**
-	 * @var bool
-	 */
-	private $removeUnusedImports = true;
-
-	private function __construct( RuleSetInterface $ruleSet ) {
-		$this->ruleSet = $ruleSet;
+	private function __construct( private RuleSetInterface $ruleSet ) {
 	}
 
 	public static function fromRuleSet( RuleSetInterface $ruleSet ): self {
@@ -37,7 +24,19 @@ final class ConfigFactory {
 	}
 
 	/**
-	 * @param array<string> $paths
+	 * Create config for a specific PHP version.
+	 */
+	public static function forPhpVersion( string $version ): self {
+		$ruleSet = match ( $version ) {
+			'8.4'   => new Php84(),
+			'8.5'   => new Php85(),
+			default => new Php83(),
+		};
+		return new self( $ruleSet );
+	}
+
+	/**
+	 * @param array<string> $paths Absolute paths to scan
 	 */
 	public function withPaths( array $paths ): self {
 		$clone = clone $this;
@@ -46,39 +45,52 @@ final class ConfigFactory {
 	}
 
 	/**
-	 * @param array<class-string|string> $skip
+	 * @param array<string> $skip Paths or rules to skip
 	 */
 	public function withSkip( array $skip ): self {
 		$clone = clone $this;
-		$clone->additionalSkip = $skip;
+		$clone->skip = $skip;
 		return $clone;
 	}
 
-	public function configure( RectorConfig $config ): RectorConfig {
+	/**
+	 * Build and return the Rector configuration.
+	 */
+	public function create(): RectorConfigBuilder {
+		$phpVersion = $this->ruleSet->targetPhpVersion();
+
+		$config = RectorConfig::configure();
+
 		if ( !empty( $this->paths ) ) {
-			$config->paths( $this->paths );
+			$config = $config->withPaths( $this->paths );
 		}
 
-		// Note: PHP version sets (withPhpSets) must be configured in the generated
-		// rector.php file directly because they use named arguments (PHP 8.0+).
-		// This factory focuses on rules, skip lists, and import configuration.
-
-		// Apply rules
-		$config->rules( $this->ruleSet->rules() );
-
-		// Apply skip list
-		$allSkip = \array_merge( $this->ruleSet->skip(), $this->additionalSkip );
+		$allSkip = \array_merge( $this->ruleSet->skip(), $this->skip );
 		if ( !empty( $allSkip ) ) {
-			$config->skip( $allSkip );
+			$config = $config->withSkip( $allSkip );
 		}
 
-		// Import configuration (from your projects)
-		$config->importNames();
-		$config->importShortClasses( $this->importShortClasses );
-		if ( $this->removeUnusedImports ) {
-			$config->removeUnusedImports();
+		$config = $config->withRules( $this->ruleSet->rules() );
+
+		// Apply PHP version sets
+		$config = $this->applyPhpSets( $config, $phpVersion );
+
+		$config = $config->withImportNames( false, true );
+
+		// Handle parallel mode
+		if ( (bool)\getenv( 'RECTOR_DISABLE_PARALLEL' ) ) {
+			return $config->withoutParallel();
 		}
 
-		return $config;
+		return $config->withParallel( 360, 4 );
+	}
+
+	private function applyPhpSets( RectorConfigBuilder $config, string $phpVersion ): RectorConfigBuilder {
+		return match ( $phpVersion ) {
+			'8.3'   => $config->withPhpSets( php83: true ),
+			'8.4'   => $config->withPhpSets( php84: true ),
+			'8.5'   => $config->withPhpSets( php85: true ),
+			default => $config->withPhpSets( php83: true ),
+		};
 	}
 }

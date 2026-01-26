@@ -7,8 +7,6 @@ use PhpCsFixer\Config;
 use PhpCsFixer\Finder;
 
 final class ConfigFactory {
-	private RuleSetInterface $ruleSet;
-
 	/**
 	 * @var Finder|null
 	 */
@@ -29,8 +27,7 @@ final class ConfigFactory {
 	 */
 	private $customRules = [];
 
-	private function __construct( RuleSetInterface $ruleSet ) {
-		$this->ruleSet = $ruleSet;
+	private function __construct( private RuleSetInterface $ruleSet ) {
 	}
 
 	public static function fromRuleSet( RuleSetInterface $ruleSet ): self {

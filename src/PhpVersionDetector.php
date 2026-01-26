@@ -3,8 +3,8 @@
 namespace FernleafSystems\QA;
 
 final class PhpVersionDetector {
-	private const SUPPORTED_VERSIONS = ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5'];
-	private const DEFAULT_VERSION = '8.3';
+	private const array SUPPORTED_VERSIONS = ['8.3', '8.4', '8.5'];
+	private const string DEFAULT_VERSION = '8.3';
 
 	public static function detect( string $projectPath ): string {
 		$composerJsonPath = \rtrim( $projectPath, '/\\' ).'/composer.json';

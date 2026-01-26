@@ -13,7 +13,7 @@ composer require --dev fernleafsystems/qa
 After installing, run the setup wizard:
 
 ```bash
-composer qa:setup
+vendor/bin/qa-setup
 ```
 
 The wizard will:
@@ -34,30 +34,45 @@ The wizard will:
 | `captainhook.json` | Pre-commit hook configuration |
 | `.gitattributes` | Line endings, diff settings, export-ignore rules |
 
-## Available Commands
+## Running the Tools
 
-After setup, these composer scripts are available:
+After setup, run the tools directly via `vendor/bin/`:
 
 ```bash
 # Code Style (PHP CS Fixer)
-composer cs              # Fix code style issues
-composer cs-check        # Check without fixing (CI)
+vendor/bin/php-cs-fixer fix --allow-risky=yes
+vendor/bin/php-cs-fixer fix --dry-run --diff --allow-risky=yes  # CI check
 
 # Rector (Automated Refactoring)
-composer rector          # Apply refactoring
-composer rector-check    # Check without applying (CI)
+vendor/bin/rector process
+vendor/bin/rector process --dry-run  # CI check
 
 # PHPStan (Static Analysis)
-composer phpstan         # Run analysis
-composer phpstan-baseline # Generate baseline for existing issues
+vendor/bin/phpstan analyse
+vendor/bin/phpstan analyse --generate-baseline  # Generate baseline
 
 # WordPress Projects Only
-composer phpcs           # Run PHP CodeSniffer
-composer phpcbf          # Auto-fix CodeSniffer issues
-
-# Tests
-composer test            # Run PHPUnit
+vendor/bin/phpcs
+vendor/bin/phpcbf  # Auto-fix
 ```
+
+### Optional: Add Composer Scripts
+
+For convenience, add these to your project's `composer.json`:
+
+```json
+{
+    "scripts": {
+        "cs": "php-cs-fixer fix --allow-risky=yes",
+        "cs-check": "php-cs-fixer fix --dry-run --diff --allow-risky=yes",
+        "rector": "rector process",
+        "rector-check": "rector process --dry-run",
+        "phpstan": "phpstan analyse"
+    }
+}
+```
+
+Then run: `composer cs`, `composer rector`, etc.
 
 ## Pre-Commit Hooks
 
@@ -89,7 +104,7 @@ return ConfigFactory::fromRuleSet( new Php83() )
     ->create();
 ```
 
-Available rulesets: `Php74`, `Php83`, `Php84`, `Php85`
+Available rulesets: `Php83`, `Php84`, `Php85`
 
 ## Customizing Rules
 
@@ -147,17 +162,18 @@ jobs:
 
       - run: composer install --no-progress
 
-      - run: composer cs-check
+      - run: vendor/bin/php-cs-fixer fix --dry-run --diff --allow-risky=yes
 
-      - run: composer rector-check
+      - run: vendor/bin/rector process --dry-run
 
-      - run: composer phpstan
+      - run: vendor/bin/phpstan analyse
 ```
 
 ## Supported PHP Versions
 
-- PHP 7.4 (generates configs without named arguments)
-- PHP 8.0, 8.1, 8.2, 8.3, 8.4
+**Requires PHP 8.3+**
+
+- PHP 8.3, 8.4
 - PHP 8.5 (forward-compatible, uses 8.4 rules until 8.5-specific rules exist)
 
 ## Coding Standards

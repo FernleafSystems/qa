@@ -1,0 +1,4 @@
+parameters:
+    # FernleafSystems standard settings
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false

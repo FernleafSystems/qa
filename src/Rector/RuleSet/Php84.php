@@ -2,7 +2,8 @@
 
 namespace FernleafSystems\QA\Rector\RuleSet;
 
-final class Php84 extends Php83 {
+class Php84 extends Php83 {
+	#[\Override]
 	public function targetPhpVersion(): string {
 		return '8.4';
 	}

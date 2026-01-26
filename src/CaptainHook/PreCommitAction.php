@@ -23,7 +23,7 @@ class PreCommitAction implements Action {
 		// Disable Rector parallel mode to avoid conflicts with file staging
 		\putenv( 'RECTOR_DISABLE_PARALLEL=1' );
 
-		$escapedFiles = \array_map( 'escapeshellarg', $stagedFiles );
+		$escapedFiles = \array_map( escapeshellarg( ... ), $stagedFiles );
 		$filesArg = \implode( ' ', $escapedFiles );
 
 		// Run Rector

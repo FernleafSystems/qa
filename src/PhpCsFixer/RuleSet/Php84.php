@@ -8,6 +8,7 @@ namespace FernleafSystems\QA\PhpCsFixer\RuleSet;
  * Add PHP 8.4-specific rules as they become available in PHP CS Fixer.
  */
 class Php84 extends Php83 {
+	#[\Override]
 	public function targetPhpVersion(): string {
 		return '8.4';
 	}

@@ -1,5 +1,12 @@
+#
+# PHPStan configuration.
+# Base rules loaded from resources/phpstan/rules.neon
+#
+includes:
+    - resources/phpstan/rules.neon
+
 parameters:
-    phpVersion: 70400
+    phpVersion: 80300
     level: 6
 
     paths:
@@ -11,6 +18,7 @@ parameters:
     bootstrapFiles:
         - vendor/autoload.php
 
-    # FernleafSystems standard settings
-    treatPhpDocTypesAsCertain: false
-    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        # Composer\Script\Event is only available when running via composer scripts
+        - '#Parameter \$event of method .* has invalid type Composer\\Script\\Event#'
+        - '#Call to method getIO\(\) on an unknown class Composer\\Script\\Event#'
