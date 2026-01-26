@@ -10,18 +10,25 @@ composer require --dev fernleafsystems/qa
 
 ## Quick Start
 
-After installing, run the setup wizard:
+**Step 1:** Run the setup wizard to generate configuration files:
 
 ```bash
 vendor/bin/qa-setup
 ```
 
-The wizard will:
-1. Detect your PHP version from `composer.json`
-2. Ask for your source directory (defaults to `src`, `lib`, `app` if found)
-3. Ask if you want to include your `tests` directory
-4. Ask for PHPStan strictness level (3 = conservative, 6 = strict)
-5. Generate all configuration files
+**Step 2:** Install the git hooks:
+
+```bash
+composer install
+```
+
+Both steps are required. The wizard generates config files including `captainhook.json`. The `composer install` reads that file and installs the actual git hooks.
+
+The wizard will ask you:
+- PHP version (detected from your `composer.json`)
+- Source directory (defaults to `src`, `lib`, `app` if found)
+- Whether to include your `tests` directory
+- PHPStan strictness level (3 = conservative, 6 = strict)
 
 ## What Gets Generated
 
@@ -76,7 +83,14 @@ Then run: `composer cs`, `composer rector`, etc.
 
 ## Pre-Commit Hooks
 
-The package installs git hooks automatically via CaptainHook. On every commit:
+**Important:** Git hooks require TWO steps to install:
+
+1. Run `vendor/bin/qa-setup` - this generates `captainhook.json`
+2. Run `composer install` - this triggers CaptainHook to install the git hooks
+
+Without both steps, hooks will NOT be installed.
+
+Once installed, on every commit:
 
 1. Rector runs on staged PHP files (with parallel mode disabled)
 2. PHP CS Fixer runs on staged PHP files
@@ -188,6 +202,15 @@ This package enforces FernleafSystems coding standards:
 - Strict types declaration on same line as opening tag
 
 ## Troubleshooting
+
+### Git hooks not running
+
+You must complete BOTH steps:
+
+1. `vendor/bin/qa-setup` - generates `captainhook.json`
+2. `composer install` - installs the git hooks
+
+Check that `captainhook.json` exists in your project root. If not, run `vendor/bin/qa-setup`.
 
 ### Pre-commit hook blocks my commit
 
