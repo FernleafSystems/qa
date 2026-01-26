@@ -15,12 +15,16 @@ Thumbs.db
 
 # PHP CS Fixer
 .php-cs-fixer.cache
+/.php-cs-fixer.php
+/rector.php
+/captainhook.json
 
 # PHPUnit
 .phpunit.result.cache
 .phpunit.cache/
 
 # PHPStan
+/phpstan.neon
 phpstan.neon.*.neon
 
 # Build artifacts

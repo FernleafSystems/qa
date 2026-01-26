@@ -98,6 +98,46 @@ final readonly class Installer {
 	}
 
 	/**
+	 * Composer script entry point for uninstall.
+	 */
+	public static function uninstall( Event $event ): void {
+		$io = $event->getIO();
+		$projectPath = \getcwd();
+
+		$io->write( '<info>FernleafSystems QA Uninstall</info>' );
+		$io->write( '' );
+
+		$confirm = $io->askConfirmation(
+			'This will remove all QA configuration files and git hooks. Continue? [y/N]: ',
+			false
+		);
+
+		if ( !$confirm ) {
+			$io->write( '<comment>Uninstall cancelled.</comment>' );
+			return;
+		}
+
+		$installer = new self( $projectPath );
+		$removed = $installer->performUninstall();
+
+		$io->write( '' );
+		if ( empty( $removed ) ) {
+			$io->write( '<comment>No QA files found to remove.</comment>' );
+		}
+		else {
+			foreach ( $removed as $file ) {
+				$io->write( "  <info>Removed</info> {$file}" );
+			}
+		}
+
+		$io->write( '' );
+		$io->write( '<info>Uninstall complete!</info>' );
+		$io->write( '' );
+		$io->write( 'To fully remove the QA package, run:' );
+		$io->write( '  <comment>composer remove --dev fernleafsystems/qa</comment>' );
+	}
+
+	/**
 	 * Standalone CLI entry point.
 	 */
 	public function run(): void {
@@ -163,6 +203,100 @@ final readonly class Installer {
 		echo "  3. Run 'vendor/bin/php-cs-fixer fix' to fix code style\n";
 		echo "  4. Run 'vendor/bin/rector process' to run refactoring\n";
 		echo "  5. Run 'vendor/bin/phpstan analyse' to run static analysis\n";
+	}
+
+	/**
+	 * Standalone CLI entry point for uninstall.
+	 */
+	public function runUninstall(): void {
+		echo "FernleafSystems QA Uninstall\n";
+		echo "============================\n\n";
+
+		echo "This will remove all QA configuration files and git hooks.\n";
+		$confirm = $this->promptYesNo( 'Continue? [y/N]: ', false );
+
+		if ( !$confirm ) {
+			echo "Uninstall cancelled.\n";
+			return;
+		}
+
+		$removed = $this->performUninstall();
+
+		echo "\n";
+		if ( empty( $removed ) ) {
+			echo "No QA files found to remove.\n";
+		}
+		else {
+			foreach ( $removed as $file ) {
+				echo "  Removed {$file}\n";
+			}
+		}
+
+		echo "\nUninstall complete!\n\n";
+		echo "To fully remove the QA package, run:\n";
+		echo "  composer remove --dev fernleafsystems/qa\n";
+	}
+
+	/**
+	 * Perform the actual uninstall - remove config files and git hooks.
+	 *
+	 * @return string[] List of removed files (relative paths)
+	 */
+	public function performUninstall(): array {
+		$removed = [];
+
+		// Configuration files to remove
+		$configFiles = [
+			'captainhook.json',
+			'.php-cs-fixer.php',
+			'.php-cs-fixer.cache',
+			'phpstan.neon',
+			'phpstan-baseline.neon',
+			'rector.php',
+			'.gitattributes',
+			'.phpcs.xml.dist',
+		];
+
+		foreach ( $configFiles as $file ) {
+			$path = $this->projectPath.\DIRECTORY_SEPARATOR.$file;
+			if ( \file_exists( $path ) ) {
+				\unlink( $path );
+				$removed[] = $file;
+			}
+		}
+
+		// Git hooks installed by CaptainHook
+		$gitHooks = [
+			'commit-msg',
+			'post-checkout',
+			'post-commit',
+			'post-merge',
+			'post-rewrite',
+			'pre-commit',
+			'pre-push',
+			'prepare-commit-msg',
+		];
+
+		$gitHooksDir = $this->projectPath.\DIRECTORY_SEPARATOR.'.git'.\DIRECTORY_SEPARATOR.'hooks';
+		if ( \is_dir( $gitHooksDir ) ) {
+			foreach ( $gitHooks as $hook ) {
+				$path = $gitHooksDir.\DIRECTORY_SEPARATOR.$hook;
+				if ( \file_exists( $path ) && $this->isCaptainHookFile( $path ) ) {
+					\unlink( $path );
+					$removed[] = '.git/hooks/'.$hook;
+				}
+			}
+		}
+
+		return $removed;
+	}
+
+	/**
+	 * Check if a git hook file was installed by CaptainHook.
+	 */
+	private function isCaptainHookFile( string $path ): bool {
+		$content = \file_get_contents( $path );
+		return $content !== false && \str_contains( $content, 'captainhook' );
 	}
 
 	private function prompt( string $question, string $default = '' ): string {

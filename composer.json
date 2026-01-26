@@ -25,7 +25,8 @@
         "phpunit/phpunit": "^9.6 || ^10.0 || ^11.0 || ^12.0"
     },
     "bin": [
-        "bin/qa-setup"
+        "bin/qa-setup",
+        "bin/qa-uninstall"
     ],
     "autoload": {
         "psr-4": {
@@ -39,6 +40,7 @@
     },
     "scripts": {
         "qa:setup": "FernleafSystems\\QA\\Installer::setup",
+        "qa:uninstall": "FernleafSystems\\QA\\Installer::uninstall",
         "cs": "php-cs-fixer fix --allow-risky=yes",
         "cs-check": "php-cs-fixer fix --dry-run --diff --allow-risky=yes",
         "rector": "rector process",
@@ -51,6 +53,7 @@
     },
     "scripts-descriptions": {
         "qa:setup": "Run interactive setup wizard to generate QA config files",
+        "qa:uninstall": "Remove all QA configuration files and git hooks",
         "cs": "Fix code style issues with PHP CS Fixer",
         "cs-check": "Check for code style issues without fixing",
         "rector": "Run Rector refactoring",
