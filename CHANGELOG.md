@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2025-01-29
+
+### Fixed
+
+- **PreCommitAction**: Fixed false positives when files have both staged and unstaged changes
+  - Capture file checksums before running formatters
+  - Compare checksums instead of using git diff to detect changes
+  - Only fail when formatters actually modify files
+  - Improve error message to list specific modified files
+  - Fixes issue where commits were blocked due to unrelated unstaged changes in files that were also being committed
+
 ## [1.0.1] - 2025-01-26
 
 ### Fixed
