@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['7.4', '8.3', '8.4']
+        php-version: ['8.3', '8.4']
 
     name: PHP ${{ matrix.php-version }}
 
@@ -40,6 +40,9 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
 
+      - name: Generate QA configs
+        run: vendor/bin/qa-ci-setup
+
       - name: Run PHPUnit
         run: vendor/bin/phpunit
 
@@ -60,6 +63,9 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
 
+      - name: Generate QA configs
+        run: vendor/bin/qa-ci-setup
+
       - name: Check code style
         run: composer cs-check
 
@@ -79,6 +85,9 @@ jobs:
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
+
+      - name: Generate QA configs
+        run: vendor/bin/qa-ci-setup
 
       - name: Run PHPStan
         run: composer phpstan
