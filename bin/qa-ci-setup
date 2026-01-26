@@ -1,0 +1,130 @@
+#!/usr/bin/env php
+<?php declare( strict_types=1 );
+
+/**
+ * QA CI Setup - Non-interactive config generation for CI environments
+ *
+ * Usage: vendor/bin/qa-ci-setup
+ *
+ * Detects if running in the QA library repo itself vs a consuming project
+ * and generates configs with appropriate paths.
+ */
+
+// Find autoloader (same pattern as qa-setup)
+$autoloadPaths = [
+    __DIR__.'/../../../autoload.php',
+    __DIR__.'/../vendor/autoload.php',
+];
+
+foreach ( $autoloadPaths as $autoloadPath ) {
+    if ( file_exists( $autoloadPath ) ) {
+        require $autoloadPath;
+        break;
+    }
+}
+
+if ( !class_exists( 'FernleafSystems\QA\Installer' ) ) {
+    fwrite( STDERR, "Error: Could not load QA Installer. Run 'composer install' first.\n" );
+    exit( 1 );
+}
+
+use FernleafSystems\QA\Installer;
+use FernleafSystems\QA\PhpVersionDetector;
+
+$projectRoot = getcwd();
+if ( !file_exists( $projectRoot.'/composer.json' ) ) {
+    fwrite( STDERR, "Error: No composer.json found. Run this from your project root.\n" );
+    exit( 1 );
+}
+
+// Detect if running in the QA library repo itself
+$composerJson = json_decode( file_get_contents( $projectRoot.'/composer.json' ), true );
+$isQaRepo = ( $composerJson['name'] ?? '' ) === 'fernleafsystems/qa';
+
+// Auto-detect settings
+$phpVersion = PhpVersionDetector::detect( $projectRoot );
+$isWordPress = PhpVersionDetector::isWordPressProject( $projectRoot );
+
+// Detect source path (replicate logic from Installer::detectSourcePath)
+$srcPath = 'src';
+foreach ( ['src', 'lib', 'app', 'source', 'classes'] as $candidate ) {
+    if ( is_dir( $projectRoot.'/'.$candidate ) ) {
+        $srcPath = $candidate;
+        break;
+    }
+}
+
+$hasTests = is_dir( $projectRoot.'/tests' );
+$paths = ['src' => $srcPath, 'tests' => $hasTests ? 'tests' : ''];
+
+echo "QA CI Setup\n";
+echo "===========\n";
+echo "QA Repo: ".($isQaRepo ? 'yes (self-test mode)' : 'no')."\n";
+echo "PHP Version: {$phpVersion}\n";
+echo "Source Path: {$srcPath}\n";
+echo "Tests: ".($hasTests ? 'yes' : 'no')."\n\n";
+
+$installer = new Installer( $projectRoot );
+
+if ( $isWordPress ) {
+    $installer->generatePhpcsConfig( $phpVersion, $paths );
+    echo "Created .phpcs.xml.dist\n";
+} else {
+    $installer->generatePhpCsFixerConfig( $phpVersion, $paths );
+    echo "Created .php-cs-fixer.php\n";
+}
+
+$installer->generateRectorConfig( $phpVersion, $paths );
+echo "Created rector.php\n";
+
+// PHPStan config needs special handling for the QA repo itself
+if ( $isQaRepo ) {
+    // When running in the QA repo, use local resources path
+    generatePHPStanConfigForQaRepo( $projectRoot, $phpVersion, $paths );
+    echo "Created phpstan.neon (using local resources path)\n";
+} else {
+    $installer->generatePHPStanConfig( $phpVersion, 3, $paths );
+    echo "Created phpstan.neon\n";
+}
+
+echo "\nCI setup complete.\n";
+
+/**
+ * Generate PHPStan config for the QA library's own repo.
+ * Uses 'resources/phpstan/rules.neon' instead of vendor path.
+ */
+function generatePHPStanConfigForQaRepo( string $projectRoot, string $phpVersion, array $paths ): void {
+    $phpVersionInt = match ( $phpVersion ) {
+        '8.4'   => 80400,
+        '8.5'   => 80500,
+        default => 80300,
+    };
+
+    $srcPath = !empty( $paths['src'] ) ? $paths['src'] : 'src';
+    $pathLines = "        - {$srcPath}";
+    if ( !empty( $paths['tests'] ) ) {
+        $pathLines .= "\n        - tests";
+    }
+
+    $content = <<<NEON
+#
+# PHPStan configuration for QA library self-testing.
+# Uses local resources path instead of vendor path.
+#
+includes:
+    - resources/phpstan/rules.neon
+
+parameters:
+    phpVersion: {$phpVersionInt}
+    level: 3
+
+    paths:
+{$pathLines}
+
+    excludePaths:
+        - */vendor/*
+
+NEON;
+
+    file_put_contents( $projectRoot.'/phpstan.neon', $content );
+}
