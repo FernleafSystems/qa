@@ -1,0 +1,12 @@
+includes:
+    - base.neon
+
+parameters:
+    phpVersion: 80400
+    level: 6
+
+    paths:
+        - src
+
+    bootstrapFiles:
+        - vendor/autoload.php

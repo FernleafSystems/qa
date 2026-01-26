@@ -1,0 +1,37 @@
+{
+    "$schema": "https://captainhookphp.github.io/captainhook/schema.json",
+    "pre-commit": {
+        "enabled": true,
+        "actions": [
+            {
+                "action": "RECTOR_DISABLE_PARALLEL=1 composer rector -- {$STAGED_FILES|of-type:php|separated-by: }",
+                "options": {
+                    "label": "Rector"
+                },
+                "conditions": [
+                    {
+                        "exec": "CaptainHook\\App\\Hook\\Condition\\FileStaged\\OfType",
+                        "args": ["php"]
+                    }
+                ]
+            },
+            {
+                "action": "composer cs -- {$STAGED_FILES|of-type:php|separated-by: }",
+                "options": {
+                    "label": "PHP-CS-Fixer"
+                },
+                "conditions": [
+                    {
+                        "exec": "CaptainHook\\App\\Hook\\Condition\\FileStaged\\OfType",
+                        "args": ["php"]
+                    }
+                ]
+            }
+        ]
+    },
+    "config": {
+        "fail-on-first-error": true,
+        "verbosity": "normal",
+        "ansi-colors": true
+    }
+}

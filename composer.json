@@ -1,0 +1,68 @@
+{
+    "name": "fernleafsystems/qa",
+    "description": "Shared PHP code quality configuration for FernleafSystems projects",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "FernleafSystems",
+            "homepage": "https://github.com/FernleafSystems"
+        }
+    ],
+    "require": {
+        "php": "^7.4 || ^8.0",
+        "friendsofphp/php-cs-fixer": "^3.92",
+        "rector/rector": "^2.3",
+        "phpstan/phpstan": "^2.1",
+        "captainhook/captainhook": "^5.25",
+        "captainhook/hook-installer": "^1.0",
+        "phpcsstandards/php_codesniffer": "^4.0",
+        "wp-coding-standards/wpcs": "^3.3",
+        "phpcompatibility/phpcompatibility-wp": "^2.1",
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6 || ^10.0 || ^11.0 || ^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "FernleafSystems\\QA\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "FernleafSystems\\QA\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "qa:setup": "FernleafSystems\\QA\\Installer::setup",
+        "cs": "php-cs-fixer fix --allow-risky=yes",
+        "cs-check": "php-cs-fixer fix --dry-run --diff --allow-risky=yes",
+        "rector": "rector process",
+        "rector-check": "rector process --dry-run",
+        "phpstan": "phpstan analyse",
+        "phpstan-baseline": "phpstan analyse --generate-baseline",
+        "phpcs": "phpcs",
+        "phpcbf": "phpcbf",
+        "test": "phpunit"
+    },
+    "scripts-descriptions": {
+        "qa:setup": "Run interactive setup wizard to generate QA config files",
+        "cs": "Fix code style issues with PHP CS Fixer",
+        "cs-check": "Check for code style issues without fixing",
+        "rector": "Run Rector refactoring",
+        "rector-check": "Check Rector changes without applying",
+        "phpstan": "Run PHPStan static analysis",
+        "phpstan-baseline": "Generate PHPStan baseline for existing issues",
+        "phpcs": "Run PHP CodeSniffer (WordPress projects)",
+        "phpcbf": "Auto-fix PHP CodeSniffer issues"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "captainhook/hook-installer": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "minimum-stability": "stable"
+}

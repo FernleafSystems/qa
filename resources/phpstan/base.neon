@@ -1,0 +1,6 @@
+parameters:
+    # treatPhpDocTypesAsCertain: false is more strict (your preference)
+    treatPhpDocTypesAsCertain: false
+
+    # Don't report errors for rules that aren't matching (pragmatic)
+    reportUnmatchedIgnoredErrors: false

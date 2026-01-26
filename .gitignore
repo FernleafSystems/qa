@@ -1,0 +1,28 @@
+# Composer
+/vendor/
+composer.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+/.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PHP CS Fixer
+.php-cs-fixer.cache
+
+# PHPUnit
+.phpunit.result.cache
+.phpunit.cache/
+
+# PHPStan
+phpstan.neon.*.neon
+
+# Build artifacts
+/build/
+/dist/

@@ -1,0 +1,16 @@
+parameters:
+    phpVersion: 70400
+    level: 6
+
+    paths:
+        - src
+
+    excludePaths:
+        - */vendor/*
+
+    bootstrapFiles:
+        - vendor/autoload.php
+
+    # FernleafSystems standard settings
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false

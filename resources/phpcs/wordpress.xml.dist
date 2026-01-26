@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<ruleset name="FernleafSystems WordPress Plugin">
+    <description>WordPress Coding Standards for FernleafSystems plugins</description>
+
+    <!-- Files to check (customize per project) -->
+    <file>src</file>
+
+    <!-- Exclude paths -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/vendor_prefixed/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>*/tests/*</exclude-pattern>
+
+    <!-- Use WordPress coding standards -->
+    <rule ref="WordPress">
+        <!-- Allow use of short array syntax -->
+        <exclude name="Generic.Arrays.DisallowShortArraySyntax"/>
+        <!-- We use tabs, not spaces -->
+        <exclude name="Generic.WhiteSpace.DisallowTabIndent"/>
+    </rule>
+
+    <!-- PHP compatibility - customize testVersion per project -->
+    <config name="testVersion" value="7.4-"/>
+    <rule ref="PHPCompatibilityWP"/>
+
+    <!-- Set text domain - customize per project -->
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array">
+                <element value="your-text-domain"/>
+            </property>
+        </properties>
+    </rule>
+</ruleset>

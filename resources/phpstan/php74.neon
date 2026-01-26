@@ -1,0 +1,16 @@
+includes:
+    - base.neon
+
+parameters:
+    phpVersion: 70400
+
+    # Conservative level for older codebases
+    level: 3
+
+    paths:
+        - src
+
+    # Common excludes
+    excludePaths:
+        - */vendor/*
+        - */vendor_prefixed/*

@@ -1,0 +1,21 @@
+includes:
+    - base.neon
+
+parameters:
+    phpVersion: 80300
+    level: 3
+
+    paths:
+        - src
+
+    bootstrapFiles:
+        - vendor/autoload.php
+
+    # Pragmatic ignores for legacy patterns
+    ignoreErrors:
+        # Ignore dynamic property access (common in legacy code)
+        - '#Access to an undefined property object::\$#'
+        # Allow missing return types during migration
+        - '#Method .+ has no return type specified#'
+        # Allow missing property types during migration
+        - '#Property .+ has no type specified#'
