@@ -28,6 +28,9 @@ class PreCommitAction implements Action {
 		// Disable Rector parallel mode to avoid conflicts with file staging
 		\putenv( 'RECTOR_DISABLE_PARALLEL=1' );
 
+		// Capture file checksums before running formatters
+		$originalChecksums = $this->getFileChecksums( $stagedFiles );
+
 		$rectorBinary = $this->getBinaryPath( 'rector' );
 		$csFixerBinary = $this->getBinaryPath( 'php-cs-fixer' );
 
@@ -56,21 +59,18 @@ class PreCommitAction implements Action {
 			}
 		}
 
-		// Check if any files were modified (check all files at once using batches)
-		$filesModified = false;
-		foreach ( $batches as $batch ) {
-			$escapedFiles = \array_map( escapeshellarg( ... ), $batch );
-			$filesArg = \implode( ' ', $escapedFiles );
-			$diffExit = $this->runCommand( 'git diff --quiet -- '.$filesArg, false );
-			if ( $diffExit !== 0 ) {
-				$filesModified = true;
-				break;
+		// Check if any files were modified by comparing checksums instead of git diff
+		$newChecksums = $this->getFileChecksums( $stagedFiles );
+		$modifiedFiles = [];
+		foreach ( $stagedFiles as $file ) {
+			if ( $originalChecksums[$file] !== $newChecksums[$file] ) {
+				$modifiedFiles[] = $file;
 			}
 		}
 
-		if ( $filesModified ) {
+		if ( !empty( $modifiedFiles ) ) {
 			throw new \RuntimeException(
-				'Code was reformatted. Please stage the changes and commit again.'
+				'Code was reformatted in: '.\implode( ', ', $modifiedFiles ).'. Please stage the changes and commit again.'
 			);
 		}
 
@@ -142,5 +142,25 @@ class PreCommitAction implements Action {
 			$binary = \str_replace( '/', '\\', $binary ).'.bat';
 		}
 		return \escapeshellarg( $binary );
+	}
+
+	/**
+	 * Get checksums for files to detect changes made by formatters.
+	 *
+	 * @param array<string> $files
+	 * @return array<string, string>
+	 */
+	private function getFileChecksums( array $files ): array {
+		$checksums = [];
+		foreach ( $files as $file ) {
+			if ( \file_exists( $file ) ) {
+				$checksums[$file] = \md5_file( $file );
+			}
+			else {
+				// File might be deleted (shouldn't happen with staged files, but be safe)
+				$checksums[$file] = '';
+			}
+		}
+		return $checksums;
 	}
 }
