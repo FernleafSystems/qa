@@ -93,10 +93,39 @@ Without both steps, hooks will NOT be installed.
 Once installed, on every commit:
 
 1. Rector runs on staged PHP files (with parallel mode disabled)
-2. PHP CS Fixer runs on staged PHP files
+2. PHP CS Fixer runs on staged PHP files (sequentially)
 3. If files were modified, the commit is blocked with a message to re-stage
 
+Both run under the PHP that runs the hook.
+
 This ensures all committed code meets quality standards.
+
+### Runaway protection
+
+Each tool runs as its own process, and the hook stops it, failing the commit, when:
+
+- **Memory:** its resident memory (its working set on Windows) passes 8 GB. This is read from the operating system, because PHP's `memory_limit` doesn't bound everything a tool can allocate. On Linux and macOS it includes any process the tool starts.
+- **Time:** it runs longer than 30 minutes.
+
+A stopped tool is killed along with any process it started. A normal run uses a fraction of either limit.
+
+The hook also refuses to run when any package under `vendor` resolves outside the checkout, such as through a junction or symlink to another checkout's vendor. The tools would load that checkout's code instead, and Rector has looped, allocating memory, when the two disagreed.
+
+Set the limits in `captainhook.json`, by adding keys to the pre-commit action's `options`. `0` turns a limit off:
+
+```json
+{
+    "action": "\FernleafSystems\QA\CaptainHook\PreCommitAction",
+    "options": {
+        "label": "FernleafSystems QA Checks",
+        "max_memory_mb": 16384,
+        "timeout_seconds": 3600,
+        "allow_external_tools": false
+    }
+}
+```
+
+Or override them for one run with `QA_HOOK_MAX_MEMORY_MB`, `QA_HOOK_TIMEOUT_SECONDS` or `QA_HOOK_ALLOW_EXTERNAL_TOOLS=1`.
 
 ## Manual Usage (Without Setup Wizard)
 

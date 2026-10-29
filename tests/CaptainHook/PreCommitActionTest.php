@@ -116,6 +116,51 @@ final class PreCommitActionTest extends TestCase {
 		$this->assertSame( $files, $batches[0] );
 	}
 
+	public function testToolsInTheCheckoutAreAccepted(): void {
+		$checkout = $this->temporaryDirectory();
+		\mkdir( $checkout.'/vendor/rector/rector', 0777, true );
+		$this->invokeAssertToolsInCheckout( $checkout );
+		$this->addToAssertionCount( 1 );
+	}
+
+	public function testAToolLinkedFromAnotherCheckoutIsRefused(): void {
+		$checkout = $this->temporaryDirectory();
+		$other = $this->temporaryDirectory();
+		\mkdir( $other.'/rector/rector', 0777, true );
+		\mkdir( $checkout.'/vendor', 0777, true );
+		$link = $checkout.'/vendor/rector';
+		if ( \PHP_OS_FAMILY === 'Windows' ) {
+			\exec( 'mklink /J '.\escapeshellarg( \str_replace( '/', '\\', $link ) ).' '.\escapeshellarg( \str_replace( '/', '\\', $other.'/rector' ) ), $output, $exit );
+			$this->assertSame( 0, $exit, 'Could not create the junction' );
+		}
+		else {
+			$this->assertTrue( \symlink( $other.'/rector', $link ) );
+		}
+
+		try {
+			$this->invokeAssertToolsInCheckout( $checkout );
+			$this->fail( 'A linked tool was accepted.' );
+		}
+		catch ( \RuntimeException $exception ) {
+			$this->assertStringContainsString( 'vendor/rector/rector resolves outside this checkout', $exception->getMessage() );
+			$this->assertStringContainsString( 'QA_HOOK_ALLOW_EXTERNAL_TOOLS', $exception->getMessage() );
+		}
+		finally {
+			// Remove the link itself, never what it points to.
+			\PHP_OS_FAMILY === 'Windows' ? \rmdir( $link ) : \unlink( $link );
+		}
+	}
+
+	private function temporaryDirectory(): string {
+		$directory = \sys_get_temp_dir().'/qa-precommit-'.\bin2hex( \random_bytes( 6 ) );
+		\mkdir( $directory );
+		return $directory;
+	}
+
+	private function invokeAssertToolsInCheckout( string $checkout ): void {
+		( new \ReflectionMethod( PreCommitAction::class, 'assertToolsInCheckout' ) )->invoke( new PreCommitAction(), $checkout );
+	}
+
 	/**
 	 * Invoke the private batchFiles method using reflection.
 	 *
