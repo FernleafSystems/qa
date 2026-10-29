@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.3] - Unreleased
+
+### Fixed
+
+- **PreCommitAction**: A tool that runs away is stopped instead of exhausting the machine
+  - Each tool runs as its own process, without a shell, under the PHP that runs the hook, and is killed with any process it started above 8 GB of resident memory or after 30 minutes; the commit fails. Memory is read from the operating system, since PHP's `memory_limit` doesn't bound every allocation
+  - Limits are set with the action's `max_memory_mb` and `timeout_seconds` options, or for one run with `QA_HOOK_MAX_MEMORY_MB` and `QA_HOOK_TIMEOUT_SECONDS`; `0` turns one off
+  - The hook refuses to run when any package under `vendor` resolves outside the checkout (a junction or symlink to another checkout's vendor), since the tools would load that checkout's code. Rector looped, reaching 80 GB, when the two disagreed. `allow_external_tools` or `QA_HOOK_ALLOW_EXTERNAL_TOOLS=1` permits it
+  - PHP-CS-Fixer runs with `--sequential`, so one process does the work, as Rector already did
+
+### Removed
+
+- `bin/pre-commit.php`, an unused copy of the pre-commit pipeline without these protections
+
 ## [1.0.2] - 2025-01-29
 
 ### Fixed
